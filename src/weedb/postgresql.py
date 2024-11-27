@@ -216,8 +216,8 @@ class Cursor(weedb.Cursor):
         
         sql_tuple: A tuple with the values to be used in the placeholders."""
 
-        # Weewx uses backticks for identifiers, but Postgres does not, so replace the `'s with '
-        postgres_string = sql_string.replace('`', "'")
+        # Weewx uses backticks for identifiers, but Postgres does not, so replace the `'s with "
+        postgres_string = sql_string.replace('`', '"')
 
         self.cursor.execute(postgres_string, sql_tuple)
 
