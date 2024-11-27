@@ -138,7 +138,7 @@ class Connection(weedb.Connection):
 
         with self.connection.cursor() as cursor:
             cursor.execute("""
-                SELECT (t.column_name, t.data_type, t.is_nullable, p.constraint_name = '%s_pkey', t.column_default)
+                SELECT t.column_name, t.data_type, t.is_nullable, p.constraint_name = '%s_pkey', t.column_default
                 FROM information_schema.columns AS t
                 LEFT JOIN information_schema.key_column_usage AS p
                 ON p.column_name = t.column_name
