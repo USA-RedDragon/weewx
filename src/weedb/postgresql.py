@@ -6,31 +6,32 @@
 """weedb driver for the PostgreSQL database"""
 
 import psycopg2
+from psycopg2 import errorcodes
 
 from weeutil.weeutil import to_bool
 import weedb
 
 exception_map = {
-    psycopg2.errorcodes.ConnectionException: weedb.CannotConnectError,
-    psycopg2.errorcodes.SqlclientUnableToEstablishSqlconnection: weedb.CannotConnectError,
-    psycopg2.errorcodes.ConnectionDoesNotExist: weedb.CannotConnectError,
-    psycopg2.errorcodes.CannotConnectNow: weedb.CannotConnectError,
-    psycopg2.errorcodes.SqlserverRejectedEstablishmentOfSqlconnection: weedb.DisconnectError,
-    psycopg2.errorcodes.ConnectionFailure: weedb.DisconnectError,
-    psycopg2.errorcodes.ProtocolViolation: weedb.DisconnectError,
-    psycopg2.errorcodes.IdleSessionTimeout: weedb.DisconnectError,
-    psycopg2.errorcodes.AdminShutdown: weedb.DisconnectError,
-    psycopg2.errorcodes.CrashShutdown: weedb.DisconnectError,
-    psycopg2.errorcodes.DatabaseDropped: weedb.DisconnectError,
-    psycopg2.errorcodes.InvalidPassword: weedb.BadPasswordError,
-    psycopg2.errorcodes.ModifyingSqlDataNotPermitted: weedb.PermissionError,
-    psycopg2.errorcodes.ProhibitedSqlStatementAttempted: weedb.PermissionError,
-    psycopg2.errorcodes.ReadingSqlDataNotPermitted: weedb.PermissionError,
-    psycopg2.errorcodes.ContainingSqlNotPermitted: weedb.PermissionError,
-    psycopg2.errorcodes.ModifyingSqlDataNotPermittedExt: weedb.PermissionError,
-    psycopg2.errorcodes.ProhibitedSqlStatementAttemptedExt: weedb.PermissionError,
-    psycopg2.errorcodes.ReadingSqlDataNotPermittedExt: weedb.PermissionError,
-    psycopg2.errorcodes.InsufficientPrivilege: weedb.PermissionError,
+    errorcodes.CONNECTION_EXCEPTION: weedb.CannotConnectError,
+    errorcodes.SQLCLIENT_UNABLE_TO_ESTABLISH_SQLCONNECTION: weedb.CannotConnectError,
+    errorcodes.CONNECTION_DOES_NOT_EXIST: weedb.CannotConnectError,
+    errorcodes.CANNOT_CONNECT_NOW: weedb.CannotConnectError,
+    errorcodes.SQLSERVER_REJECTED_ESTABLISHMENT_OF_SQLCONNECTION: weedb.DisconnectError,
+    errorcodes.CONNECTION_FAILURE: weedb.DisconnectError,
+    errorcodes.PROTOCOL_VIOLATION: weedb.DisconnectError,
+    errorcodes.IDLE_SESSION_TIMEOUT: weedb.DisconnectError,
+    errorcodes.ADMIN_SHUTDOWN: weedb.DisconnectError,
+    errorcodes.CRASH_SHUTDOWN: weedb.DisconnectError,
+    errorcodes.DATABASE_DROPPED: weedb.DisconnectError,
+    errorcodes.INVALID_PASSWORD: weedb.BadPasswordError,
+    errorcodes.MODIFYING_SQL_DATA_NOT_PERMITTED: weedb.PermissionError,
+    errorcodes.PROHIBITED_SQL_STATEMENT_ATTEMPTED: weedb.PermissionError,
+    errorcodes.READING_SQL_DATA_NOT_PERMITTED: weedb.PermissionError,
+    errorcodes.CONTAINING_SQL_NOT_PERMITTED: weedb.PermissionError,
+    errorcodes.MODIFYING_SQL_DATA_NOT_PERMITTED_EXT: weedb.PermissionError,
+    errorcodes.PROHIBITED_SQL_STATEMENT_ATTEMPTED_EXT: weedb.PermissionError,
+    errorcodes.READING_SQL_DATA_NOT_PERMITTED_EXT: weedb.PermissionError,
+    errorcodes.INSUFFICIENT_PRIVILEGE: weedb.PermissionError,
     None: weedb.DatabaseError
 }
 
