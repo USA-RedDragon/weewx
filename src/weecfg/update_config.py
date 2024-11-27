@@ -629,6 +629,35 @@ def update_to_v32(config_dict):
         except KeyError:
             pass
 
+        # Now do PostgreSQL. Start with a sanity check:
+        try:
+            assert (config_dict['Databases']['archive_postgresql']['driver'] == 'weedb.postgresql')
+        except KeyError:
+            pass
+        config_dict['DatabaseTypes']['PostgreSQL'] = {}
+        config_dict['DatabaseTypes'].comments['PostgreSQL'] = ['', '    # Defaults for PostgreSQL databases']
+        try:
+            config_dict['DatabaseTypes']['PostgreSQL']['host'] = \
+                config_dict['Databases']['archive_postgresql'].get('host', 'localhost')
+            config_dict['DatabaseTypes']['PostgreSQL']['user'] = \
+                config_dict['Databases']['archive_postgresql'].get('user', 'weewx')
+            config_dict['DatabaseTypes']['PostgreSQL']['password'] = \
+                config_dict['Databases']['archive_postgresql'].get('password', 'weewx')
+            config_dict['DatabaseTypes']['PostgreSQL']['driver'] = 'weedb.postgresql'
+            config_dict['DatabaseTypes']['PostgreSQL'].comments['host'] = [
+                "        # The host where the database is located"]
+            config_dict['DatabaseTypes']['PostgreSQL'].comments['user'] = [
+                "        # The user name for logging into the host"]
+            config_dict['DatabaseTypes']['PostgreSQL'].comments['password'] = [
+                "        # The password for the user name"]
+            config_dict['Databases']['archive_postgresql'].pop('host', None)
+            config_dict['Databases']['archive_postgresql'].pop('user', None)
+            config_dict['Databases']['archive_postgresql'].pop('password', None)
+            config_dict['Databases']['archive_postgresql']['database_type'] = 'PostgreSQL'
+            config_dict['Databases'].comments['archive_postgresql'] = ['']
+        except KeyError:
+            pass
+
         # Move the new section to just before [Engine]
         weecfg.reorder_sections(config_dict, 'DatabaseTypes', 'Engine')
         # Add a major comment deliminator:

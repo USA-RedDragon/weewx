@@ -18,6 +18,8 @@ from weeutil.weeutil import version_compare
 sqlite_db_dict = {'database_name': '/var/tmp/test.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
 mysql_db_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1',
                  'driver': 'weedb.mysql'}
+postgresql_db_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1',
+                 'driver': 'weedb.postgresql'}
 
 # Schema summary:
 # (col_number, col_name, col_type, can_be_null, default_value, part_of_primary)
@@ -242,6 +244,21 @@ class TestMySQL(Common):
             self.assertTrue(_v[1] in ['0', '1', '2'], "Unknown lower_case_table_names value")
             _v = _connect.get_variable('foo')
             self.assertEqual(_v, None)
+
+
+class TestPostgreSQL(Common):
+
+    def __init__(self, *args, **kwargs):
+        self.db_dict = postgresql_db_dict
+        super().__init__(*args, **kwargs)
+
+    def test_variable(self):
+        import pyscopg2
+        weedb.create(self.db_dict)
+        with weedb.connect(self.db_dict) as _connect:
+            _v = _connect.get_variable('foo')
+            self.assertIsNone(_v)
+        _connect.close()
 
 
 def suite():

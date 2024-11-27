@@ -1,0 +1,199 @@
+#
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+"""weedb driver for the PostgreSQL database"""
+
+import psycopg2
+
+from weeutil.weeutil import to_bool
+import weedb
+
+exception_map = {
+    psycopg2.errorcodes.ConnectionException: weedb.CannotConnectError,
+    psycopg2.errorcodes.SqlclientUnableToEstablishSqlconnection: weedb.CannotConnectError,
+    psycopg2.errorcodes.ConnectionDoesNotExist: weedb.CannotConnectError,
+    psycopg2.errorcodes.CannotConnectNow: weedb.CannotConnectError,
+    psycopg2.errorcodes.SqlserverRejectedEstablishmentOfSqlconnection: weedb.DisconnectError,
+    psycopg2.errorcodes.ConnectionFailure: weedb.DisconnectError,
+    psycopg2.errorcodes.ProtocolViolation: weedb.DisconnectError,
+    psycopg2.errorcodes.IdleSessionTimeout: weedb.DisconnectError,
+    psycopg2.errorcodes.AdminShutdown: weedb.DisconnectError,
+    psycopg2.errorcodes.CrashShutdown: weedb.DisconnectError,
+    psycopg2.errorcodes.DatabaseDropped: weedb.DisconnectError,
+    psycopg2.errorcodes.InvalidPassword: weedb.BadPasswordError,
+    psycopg2.errorcodes.ModifyingSqlDataNotPermitted: weedb.PermissionError,
+    psycopg2.errorcodes.ProhibitedSqlStatementAttempted: weedb.PermissionError,
+    psycopg2.errorcodes.ReadingSqlDataNotPermitted: weedb.PermissionError,
+    psycopg2.errorcodes.ContainingSqlNotPermitted: weedb.PermissionError,
+    psycopg2.errorcodes.ModifyingSqlDataNotPermittedExt: weedb.PermissionError,
+    psycopg2.errorcodes.ProhibitedSqlStatementAttemptedExt: weedb.PermissionError,
+    psycopg2.errorcodes.ReadingSqlDataNotPermittedExt: weedb.PermissionError,
+    psycopg2.errorcodes.InsufficientPrivilege: weedb.PermissionError,
+    None: weedb.DatabaseError
+}
+
+
+def guard(fn):
+    """Decorator function that converts PostgreSQL exceptions into weedb exceptions."""
+
+    def guarded_fn(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except psycopg2.Error as e:
+            # Get the PostgreSQL exception number out of e:
+            try:
+                errno = e.pgcode
+            except (AttributeError):
+                errno = None
+            # Default exception is weedb.DatabaseError
+            klass = exception_map.get(errno, weedb.DatabaseError)
+            raise klass(e)
+
+    return guarded_fn
+
+
+def connect(host='localhost', user='', password='', database_name='',
+            port=5432, **kwargs):
+    """Connect to the specified database"""
+    return Connection(host=host, port=int(port), user=user, password=password,
+                      database_name=database_name, **kwargs)
+
+
+def create(host='localhost', user='', password='', database_name='',
+           port=5432, **kwargs):
+    """Create the specified database. If it already exists,
+    an exception of type weedb.DatabaseExistsError will be raised."""
+
+    # Open up a connection w/o specifying the database.
+    with Connection(host=host,
+                    port=int(port),
+                    user=user,
+                    password=password,
+                    **kwargs) as connect:
+        with connect.cursor() as cursor:
+            # Now create the database.
+            cursor.execute("CREATE DATABASE %s" % (database_name,))
+
+
+def drop(host='localhost', user='', password='', database_name='',
+         port=5432, **kwargs):
+    """Drop (delete) the specified database."""
+
+    with Connection(host=host,
+                    port=int(port),
+                    user=user,
+                    password=password,
+                    **kwargs) as connect:
+        with connect.cursor() as cursor:
+            cursor.execute("DROP DATABASE %s" % database_name)
+
+
+class Connection(weedb.Connection):
+    """A wrapper around a PostgreSQL connection object."""
+
+    @guard
+    def __init__(self, host='localhost', user='', password='', database_name='',
+                 port=5432, **kwargs):
+        """Initialize an instance of Connection.
+
+        Args:
+            host (str): IP or hostname hosting the PostgreSQL database.
+                Alternatively, the path to the socket mount. (required)
+            user (str): The username (required)
+            password (str): The password for the username (required)
+            database_name (str): The database to be used. (required)
+            port (int): Its port number (optional; default is 5432)
+            kwargs (dict):   Any extra arguments you may wish to pass on to psycopg2's
+              connect statement (optional).
+        """
+        connection = psycopg2.connect(host=host, port=int(port), user=user, password=password,
+                                     dbname=database_name, **kwargs)
+
+        weedb.Connection.__init__(self, connection, database_name, 'postgresql')
+
+    def cursor(self):
+        """Return a cursor object."""
+        return self.connection.cursor()
+
+    @guard
+    def tables(self):
+        """Returns a list of tables in the database."""
+
+        table_list = list()
+        # Get a cursor directly from PostgreSQL
+        with self.connection.cursor() as cursor:
+            cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+            while True:
+                row = cursor.fetchone()
+                if row is None: break
+                # Extract the table name. In case it's in unicode, convert to a regular string.
+                table_list.append(str(row[0]))
+        return table_list
+
+    @guard
+    def genSchemaOf(self, table):
+        """Return a summary of the schema of the specified table.
+        
+        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+
+        with self.connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT (t.column_name, t.data_type, t.is_nullable, p.constraint_name = '%s_pkey', t.column_default)
+                FROM information_schema.columns AS t
+                LEFT JOIN information_schema.key_column_usage AS p
+                ON p.column_name = t.column_name
+                WHERE t.table_name = '%s' AND (p.constraint_name = '%s_pkey' OR p.constraint_name IS NULL);
+            """ % (table, table, table))
+            if cursor.rowcount == 0:
+                raise weedb.OperationalError("Table %s does not exist" % table)
+            irow = 0
+            while True:
+                row = cursor.fetchone()
+                if row is None:
+                    break
+                # Append this column to the list of columns.
+                colname = str(row[0])
+                if row[1].upper() == 'NUMERIC':
+                    coltype = 'REAL'
+                elif row[1].upper().contains('INT'):
+                    coltype = 'INTEGER'
+                elif row[1].upper() == "TEXT":
+                    coltype = 'STR'
+                else:
+                    coltype = str(row[1]).upper()
+                is_primary = False if row[3] == '' else to_bool(row[3])
+                can_be_null = False if row[2] == '' else to_bool(row[2])
+                yield (irow, colname, coltype, can_be_null, row[4], is_primary)
+                irow += 1
+
+    @guard
+    def columnsOf(self, table):
+        """Return a list of columns in the specified table. 
+        
+        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        column_list = [row[1] for row in self.genSchemaOf(table)]
+        return column_list
+
+    @guard
+    def get_variable(self, var_name):
+        with self.connection.cursor() as cursor:
+            cursor.execute("SHOW %s;" % var_name)
+            row = cursor.fetchone()
+            # This is actually a 2-way tuple (variable-name, variable-value),
+            # or None, if the variable does not exist.
+            return row
+
+    @guard
+    def begin(self):
+        """Begin a transaction."""
+        self.connection.query("START TRANSACTION")
+
+    @guard
+    def commit(self):
+        self.connection.commit()
+
+    @guard
+    def rollback(self):
+        self.connection.rollback()

@@ -345,6 +345,9 @@ class ExtensionEngine:
                     elif db_dict['driver'] == 'weedb.mysql':
                         db_dict['database_type'] = 'MySQL'
                         db_dict.pop('driver')
+                    elif db_dict['driver'] == 'weedb.postgresql':
+                        db_dict['database_type'] = 'PostgreSQL'
+                        db_dict.pop('driver')
 
         if not self.dry_run:
             # Inject any new config data into the configuration file
