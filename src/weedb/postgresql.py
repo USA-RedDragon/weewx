@@ -186,7 +186,7 @@ class Connection(weedb.Connection):
     @guard
     def begin(self):
         """Begin a transaction."""
-        self.connection.execute("START TRANSACTION")
+        self.connection.cursor().execute("START TRANSACTION")
 
     @guard
     def commit(self):
