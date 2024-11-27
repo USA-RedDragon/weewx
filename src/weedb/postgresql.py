@@ -53,14 +53,14 @@ def guard(fn):
 
 
 def connect(host='localhost', user='', password='', database_name='',
-            port=5432, **kwargs):
+            port=5432, driver='', **kwargs):
     """Connect to the specified database"""
     return Connection(host=host, port=int(port), user=user, password=password,
                       database_name=database_name, **kwargs)
 
 
 def create(host='localhost', user='', password='', database_name='',
-           port=5432, **kwargs):
+           port=5432, driver='', **kwargs):
     """Create the specified database. If it already exists,
     an exception of type weedb.DatabaseExistsError will be raised."""
 
@@ -76,7 +76,7 @@ def create(host='localhost', user='', password='', database_name='',
 
 
 def drop(host='localhost', user='', password='', database_name='',
-         port=5432, **kwargs):
+         port=5432, driver='', **kwargs):
     """Drop (delete) the specified database."""
 
     with Connection(host=host,
