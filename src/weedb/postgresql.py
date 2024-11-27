@@ -154,14 +154,7 @@ class Connection(weedb.Connection):
                 print(row)
                 # Append this column to the list of columns.
                 colname = str(row[0])
-                if row[1].upper() == 'NUMERIC':
-                    coltype = 'REAL'
-                elif row[1].upper().contains('INT'):
-                    coltype = 'INTEGER'
-                elif row[1].upper() == "TEXT":
-                    coltype = 'STR'
-                else:
-                    coltype = str(row[1]).upper()
+                coltype = str(row[1]).upper()
                 is_primary = False if row[3] == '' else to_bool(row[3])
                 can_be_null = False if row[2] == '' else to_bool(row[2])
                 yield (irow, colname, coltype, can_be_null, row[4], is_primary)
