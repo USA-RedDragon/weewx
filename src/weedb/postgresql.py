@@ -145,7 +145,7 @@ class Connection(weedb.Connection):
                 WHERE t.table_name = '%s' AND (p.constraint_name = '%s_pkey' OR p.constraint_name IS NULL);
             """ % (table, table, table))
             if cursor.rowcount == 0:
-                raise weedb.OperationalError("Table %s does not exist" % table)
+                raise weedb.ProgrammingError("Table %s does not exist" % table)
             irow = 0
             while True:
                 row = cursor.fetchone()
