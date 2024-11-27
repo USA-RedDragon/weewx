@@ -155,8 +155,8 @@ class Connection(weedb.Connection):
                 # Append this column to the list of columns.
                 colname = str(row[0])
                 coltype = str(row[1]).upper()
-                is_primary = False if row[3] == '' else to_bool(row[3])
                 can_be_null = False if row[2] == '' else to_bool(row[2])
+                is_primary = False if row[3] == None else row[3]
                 yield (irow, colname, coltype, can_be_null, row[4], is_primary)
                 irow += 1
 
