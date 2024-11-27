@@ -28,9 +28,6 @@ exception_map = {
     errorcodes.PROHIBITED_SQL_STATEMENT_ATTEMPTED: weedb.PermissionError,
     errorcodes.READING_SQL_DATA_NOT_PERMITTED: weedb.PermissionError,
     errorcodes.CONTAINING_SQL_NOT_PERMITTED: weedb.PermissionError,
-    errorcodes.MODIFYING_SQL_DATA_NOT_PERMITTED_EXT: weedb.PermissionError,
-    errorcodes.PROHIBITED_SQL_STATEMENT_ATTEMPTED_EXT: weedb.PermissionError,
-    errorcodes.READING_SQL_DATA_NOT_PERMITTED_EXT: weedb.PermissionError,
     errorcodes.INSUFFICIENT_PRIVILEGE: weedb.PermissionError,
     None: weedb.DatabaseError
 }
