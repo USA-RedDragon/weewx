@@ -113,7 +113,7 @@ class Connection(weedb.Connection):
 
     def cursor(self):
         """Return a cursor object."""
-        return self.connection.cursor()
+        return Cursor(self)
 
     @guard
     def tables(self):
@@ -195,3 +195,60 @@ class Connection(weedb.Connection):
     @guard
     def rollback(self):
         self.connection.rollback()
+
+class Cursor(weedb.Cursor):
+    """A wrapper around the MySQLdb cursor object"""
+
+    @guard
+    def __init__(self, connection):
+        """Initialize a Cursor from a connection.
+        
+        connection: An instance of db.mysql.Connection"""
+
+        self.cursor = connection.connection.cursor()
+
+    @guard
+    def execute(self, sql_string, sql_tuple=()):
+        """Execute a SQL statement on the MySQL server.
+        
+        sql_string: A SQL statement to be executed. It should use ? as
+        a placeholder.
+        
+        sql_tuple: A tuple with the values to be used in the placeholders."""
+
+        # Weewx uses backticks for identifiers, but Postgres does not, so replace the `'s with '
+        postgres_string = sql_string.replace('`', "'")
+
+        self.cursor.execute(postgres_string, sql_tuple)
+
+        return self
+
+    def fetchone(self):
+        # Get a result from the MySQL cursor, then run it through the _massage
+        # filter below
+        return self.cursor.fetchone()
+
+    def close(self):
+        try:
+            self.cursor.close()
+            del self.cursor
+        except AttributeError:
+            pass
+
+    #
+    # Supplying functions __iter__ and next allows the cursor to be used as an iterator.
+    #
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        result = self.fetchone()
+        if result is None:
+            raise StopIteration
+        return result
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, etyp, einst, etb):
+        self.close()
