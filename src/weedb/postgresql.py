@@ -151,7 +151,6 @@ class Connection(weedb.Connection):
                 row = cursor.fetchone()
                 if row is None:
                     break
-                print(row)
                 # Append this column to the list of columns.
                 colname = str(row[0])
                 coltype = str(row[1]).upper()
