@@ -210,8 +210,10 @@ class Cursor(weedb.Cursor):
         
         sql_tuple: A tuple with the values to be used in the placeholders."""
 
+        # Psycopg2 uses '%s' as placeholders, so replace the ?'s with %s
+        postgres_string = sql_string.replace('?', '%s')
         # Weewx uses backticks for identifiers, but Postgres does not, so replace the `'s with "
-        postgres_string = sql_string.replace('`', '"')
+        postgres_string = postgres_string.replace('`', '"')
 
         self.cursor.execute(postgres_string, sql_tuple)
 
