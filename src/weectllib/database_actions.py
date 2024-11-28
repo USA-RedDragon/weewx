@@ -352,7 +352,7 @@ def transfer_database(config_dict,
     # All looks good. Get a manager for our source
     with weewx.manager.Manager.open(src_manager_dict['database_dict']) as src_manager:
         # How many source records?
-        num_recs = src_manager.getSql("SELECT COUNT(dateTime) from %s;"
+        num_recs = src_manager.getSql("SELECT COUNT('dateTime') from %s;"
                                       % src_manager.table_name)[0]
         if not num_recs:
             # we have no source records to transfer so abort with a message

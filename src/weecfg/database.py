@@ -108,7 +108,7 @@ class DatabaseFix:
             observation. None is returned if no record culd be found.
         """
 
-        _sql_str = "SELECT MIN(dateTime) FROM %s_day_%s" % (self.dbm.table_name,
+        _sql_str = "SELECT MIN('dateTime') FROM %s_day_%s" % (self.dbm.table_name,
                                                             obs_type)
         _row = self.dbm.getSql(_sql_str)
         return _row[0] if _row else None
@@ -272,11 +272,11 @@ class WindSpeedRecalculation(DatabaseFix):
             weewx.ViolatedPrecondition: If no observation field values are found.
         """
 
-        select_str = "SELECT dateTime, %(obs_type)s FROM %(table_name)s " \
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND " \
-                     "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s " \
-                     "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND " \
-                     "%(obs_type)s IS NOT NULL"
+        select_str = "SELECT 'dateTime', '%(obs_type)s' FROM %(table_name)s " \
+                     "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s AND " \
+                     "'%(obs_type)s' = (SELECT MAX('%(obs_type)s') FROM %(table_name)s " \
+                     "WHERE 'dateTime' > %(start)s and 'dateTime' <= %(stop)s) AND " \
+                     "'%(obs_type)s' IS NOT NULL"
         interpolate_dict = {'obs_type': obs,
                             'table_name': self.dbm.table_name,
                             'start': span.start,
@@ -308,8 +308,8 @@ class WindSpeedRecalculation(DatabaseFix):
 
         _cursor = cursor or self.dbm.connection.cursor()
 
-        max_update_str = "UPDATE %s_day_%s SET %s=?,%s=? " \
-                         "WHERE datetime=?" % (self.dbm.table_name, obs, 'max', 'maxtime')
+        max_update_str = "UPDATE '%s_day_%s' SET '%s'=?,'%s'=? " \
+                         "WHERE 'datetime'=?" % (self.dbm.table_name, obs, 'max', 'maxtime')
         _cursor.execute(max_update_str, (value, when_ts, row_ts))
         if cursor is None:
             _cursor.close()
@@ -537,9 +537,9 @@ class CalcMissing(DatabaseFix):
             # when the SQL statement is executed. We should not see any field
             # names that are SQLite/MySQL reserved words (e.g., interval) but just
             # in case enclose field names in backquotes.
-            set_str = ','.join(["`%s`=?" % k for k in key_list])
+            set_str = ','.join(["'%s'=?" % k for k in key_list])
             # form the SQL update statement
-            sql_update_stmt = "UPDATE %s SET %s WHERE dateTime=%s" % (self.dbm.table_name,
+            sql_update_stmt = "UPDATE '%s' SET %s WHERE 'dateTime'=%s" % (self.dbm.table_name,
                                                                       set_str,
                                                                       ts)
             # obtain a cursor if we don't have one

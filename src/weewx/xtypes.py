@@ -266,54 +266,54 @@ class ArchiveTable(XType):
 
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     agg_sql_dict = {
-        'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM archive a, archive b "
-                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
-                "WHERE dateTime <= %(stop)s) "
-                "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
-                "WHERE dateTime >= %(start)s);",
-        'first': "SELECT %(sql_type)s FROM %(table_name)s "
-                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                 "AND %(sql_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
-        'firsttime': "SELECT MIN(dateTime) FROM %(table_name)s "
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                     "AND %(sql_type)s IS NOT NULL",
-        'last': "SELECT %(sql_type)s FROM %(table_name)s "
-                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                "AND %(sql_type)s IS NOT NULL ORDER BY dateTime DESC LIMIT 1",
-        'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "
-                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                    "AND %(sql_type)s IS NOT NULL",
-        'maxtime': "SELECT dateTime FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "AND %(sql_type)s IS NOT NULL ORDER BY %(sql_type)s DESC LIMIT 1",
-        'mintime': "SELECT dateTime FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "AND %(sql_type)s IS NOT NULL ORDER BY %(sql_type)s ASC LIMIT 1",
+        'diff': "SELECT (b.'%(sql_type)s' - a.'%(sql_type)s') FROM archive a, archive b "
+                "WHERE b.'dateTime' = (SELECT MAX('dateTime') FROM archive "
+                "WHERE 'dateTime' <= %(stop)s) "
+                "AND a.'dateTime' = (SELECT MIN('dateTime') FROM archive "
+                "WHERE 'dateTime' >= %(start)s);",
+        'first': "SELECT '%(sql_type)s' FROM %(table_name)s "
+                 "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                 "AND '%(sql_type)s' IS NOT NULL ORDER BY 'dateTime' ASC LIMIT 1",
+        'firsttime': "SELECT MIN('dateTime') FROM %(table_name)s "
+                     "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                     "AND '%(sql_type)s' IS NOT NULL",
+        'last': "SELECT '%(sql_type)s' FROM %(table_name)s "
+                "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                "AND '%(sql_type)s' IS NOT NULL ORDER BY 'dateTime' DESC LIMIT 1",
+        'lasttime': "SELECT MAX('dateTime') FROM %(table_name)s "
+                    "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                    "AND '%(sql_type)s' IS NOT NULL",
+        'maxtime': "SELECT 'dateTime' FROM %(table_name)s "
+                   "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                   "AND '%(sql_type)s' IS NOT NULL ORDER BY '%(sql_type)s' DESC LIMIT 1",
+        'mintime': "SELECT 'dateTime' FROM %(table_name)s "
+                   "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                   "AND '%(sql_type)s' IS NOT NULL ORDER BY '%(sql_type)s' ASC LIMIT 1",
         'not_null': "SELECT 1 FROM %(table_name)s "
-                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                    "AND %(sql_type)s IS NOT NULL LIMIT 1",
-        'tderiv': "SELECT (b.%(sql_type)s - a.%(sql_type)s) / (b.dateTime-a.dateTime) "
+                    "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                    "AND '%(sql_type)s' IS NOT NULL LIMIT 1",
+        'tderiv': "SELECT (b.'%(sql_type)s' - a.'%(sql_type)s') / (b.'dateTime'-a.'dateTime') "
                   "FROM archive a, archive b "
-                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
+                  "WHERE b.dateTime = (SELECT MAX('dateTime') FROM archive "
                   "WHERE dateTime <= %(stop)s) "
-                  "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
-                  "WHERE dateTime >= %(start)s);",
-        'gustdir': "SELECT windGustDir FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "ORDER BY windGust DESC limit 1",
+                  "AND a.'dateTime' = (SELECT MIN('dateTime') FROM archive "
+                  "WHERE 'dateTime' >= %(start)s);",
+        'gustdir': "SELECT 'windGustDir' FROM %(table_name)s "
+                   "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                   "ORDER BY 'windGust' DESC limit 1",
         # Aggregations 'vecdir' and 'vecavg' require built-in math functions,
         # which were introduced in sqlite v3.35.0, 12-Mar-2021. If they don't exist, then
         # weewx will raise an exception of type "weedb.OperationalError".
-        'vecdir': "SELECT SUM(`interval` * windSpeed * COS(RADIANS(90 - windDir))), "
-                  "       SUM(`interval` * windSpeed * SIN(RADIANS(90 - windDir))) "
+        'vecdir': "SELECT SUM('interval' * 'windSpeed' * COS(RADIANS(90 - 'windDir'))), "
+                  "       SUM('interval' * 'windSpeed' * SIN(RADIANS(90 - 'windDir'))) "
                   "FROM %(table_name)s "
-                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s ",
-        'vecavg': "SELECT SUM(`interval` * windSpeed * COS(RADIANS(90 - windDir))), "
-                  "       SUM(`interval` * windSpeed * SIN(RADIANS(90 - windDir))), "
-                  "       SUM(`interval`) "
+                  "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s ",
+        'vecavg': "SELECT SUM('interval' * 'windSpeed' * COS(RADIANS(90 - 'windDir'))), "
+                  "       SUM('interval' * 'windSpeed' * SIN(RADIANS(90 - 'windDir'))), "
+                  "       SUM('interval') "
                   "FROM %(table_name)s "
-                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                  "AND windSpeed is not null"
+                  "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s "
+                  "AND 'windSpeed' is not null"
     }
 
     valid_aggregate_types = set(['sum', 'count', 'avg', 'max', 'min']).union(agg_sql_dict.keys())
@@ -1211,8 +1211,8 @@ class WindVecDaily(XType):
             return DailySummaries.get_aggregate('wind', timespan, 'not_null', db_manager,
                                                 **option_dict)
 
-        sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
-              'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
+        sql = "SELECT SUM('xsum'), SUM('ysum'), SUM('dirsumtime') " \
+              "FROM %s_day_wind WHERE 'dateTime'>=? AND 'dateTime'<?;" % db_manager.table_name
 
         row = db_manager.getSql(sql, timespan)
 

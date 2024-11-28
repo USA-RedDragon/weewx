@@ -104,7 +104,7 @@ class ProcessMonitor(StdService):
 
     def prune_data(self, ts):
         """delete records with dateTime older than ts"""
-        sql = "delete from %s where dateTime < %d" % (self.dbm.table_name, ts)
+        sql = "delete from %s where 'dateTime' < %d" % (self.dbm.table_name, ts)
         self.dbm.getSql(sql)
         try:
             # sqlite databases need some help to stay small

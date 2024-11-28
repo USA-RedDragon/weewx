@@ -282,7 +282,7 @@ class Manager:
 
         # List comprehension of the types, joined together with commas. Put the SQL type in
         # backquotes, because at least one of them ('interval') is a MySQL reserved word
-        sqltypestr = ', '.join(["`%s` %s" % _type for _type in table_schema])
+        sqltypestr = ', '.join(["\"%s\" %s" % _type for _type in table_schema])
 
         try:
             with weedb.Transaction(self.connection) as cursor:
@@ -300,7 +300,7 @@ class Manager:
 
         # Fetch the first row in the database to determine the unit system in use. If the database
         # has never been used, then the unit system is still indeterminate --- set it to 'None'.
-        _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
+        _row = self.getSql("SELECT 'usUnits' FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
 
         # Cache the first and last timestamps
@@ -317,7 +317,7 @@ class Manager:
             int|None: Time of the last good archive record as an epoch time,
                 or None if there are no records.
         """
-        _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table_name)
+        _row = self.getSql("SELECT MAX('dateTime') FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def firstGoodStamp(self):
@@ -327,7 +327,7 @@ class Manager:
             int|None: Time of the first good archive record as an epoch time,
                 or None if there are no records.
         """
-        _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
+        _row = self.getSql("SELECT MIN('dateTime') FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def exists(self, obs_type):
@@ -447,12 +447,12 @@ class Manager:
 
         # This will a string of sql types, separated by commas. Because some weewx sql keys
         # (notably 'interval') are reserved words in MySQL, put them in backquotes.
-        k_str = ','.join(["`%s`" % k for k in key_list])
+        k_str = ','.join(["'%s'" % k for k in key_list])
         # This will be a string with the correct number of placeholder
         # question marks:
         q_str = ','.join('?' * len(key_list))
         # Form the SQL insert statement:
-        sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
+        sql_insert_stmt = "INSERT INTO '%s' (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
         try:
             cursor.execute(sql_insert_stmt, value_list)
             if log_success:
@@ -463,9 +463,9 @@ class Manager:
         except weedb.IntegrityError:
             if not update:
                 raise
-            set_stmt = ', '.join(["%s=?" % k for k in key_list])
-            where_stmt = ' AND '.join(["%s IS ?" % k for k in key_list])
-            sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" % (self.table_name, set_stmt, where_stmt)
+            set_stmt = ', '.join(["'%s'=?" % k for k in key_list])
+            where_stmt = ' AND '.join(["'%s' IS ?" % k for k in key_list])
+            sql_update_stmt = "UPDATE '%s' SET %s WHERE 'dateTime' = ? AND NOT (%s)" % (self.table_name, set_stmt, where_stmt)
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
             if log_success:
                 if cursor.rowcount > 0:
@@ -499,22 +499,22 @@ class Manager:
             if startstamp is None:
                 if stopstamp is None:
                     gen = cursor.execute("SELECT * FROM %s "
-                                         "ORDER BY dateTime ASC" % self.table_name)
+                                         "ORDER BY 'dateTime' ASC" % self.table_name)
                 else:
                     gen = cursor.execute("SELECT * FROM %s "
-                                         "WHERE dateTime <= ? "
-                                         "ORDER BY dateTime ASC" % self.table_name,
+                                         "WHERE 'dateTime' <= ? "
+                                         "ORDER BY 'dateTime' ASC" % self.table_name,
                                          (stopstamp,))
             else:
                 if stopstamp is None:
                     gen = cursor.execute("SELECT * FROM %s "
-                                         "WHERE dateTime > ? "
-                                         "ORDER BY dateTime ASC" % self.table_name,
+                                         "WHERE 'dateTime' > ? "
+                                         "ORDER BY 'dateTime' ASC" % self.table_name,
                                          (startstamp,))
                 else:
                     gen = cursor.execute("SELECT * FROM %s "
-                                         "WHERE dateTime > ? AND dateTime <= ? "
-                                         "ORDER BY dateTime ASC" % self.table_name,
+                                         "WHERE 'dateTime' > ? AND 'dateTime' <= ? "
+                                         "ORDER BY 'dateTime' ASC" % self.table_name,
                                          (startstamp, stopstamp))
 
             for row in gen:
@@ -561,11 +561,11 @@ class Manager:
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "
-                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
+                _cursor.execute("SELECT * FROM %s WHERE 'dateTime'>=? AND 'dateTime'<=? "
+                                "ORDER BY ABS('dateTime'-?) ASC LIMIT 1" % self.table_name,
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
-                _cursor.execute("SELECT * FROM %s WHERE dateTime=?"
+                _cursor.execute("SELECT * FROM %s WHERE 'dateTime'=?"
                                 % self.table_name, (timestamp,))
             _row = _cursor.fetchone()
             return dict(zip(self.sqlkeys, _row)) if _row else None
@@ -579,7 +579,7 @@ class Manager:
             new_value (float | str): The updated value
         """
 
-        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" %
+        self.connection.execute("UPDATE '%s' SET '%s'=? WHERE 'dateTime'=?" %
                                 (self.table_name, obs_type), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=(), cursor=None):
@@ -644,7 +644,7 @@ class Manager:
 
     def _add_column(self, column_name, column_type, cursor):
         """Add a column to the main archive table"""
-        cursor.execute("ALTER TABLE %s ADD COLUMN `%s` %s"
+        cursor.execute("ALTER TABLE %s ADD COLUMN '%s' %s"
                        % (self.table_name, column_name, column_type))
 
     def rename_column(self, old_column_name, new_column_name):
@@ -659,7 +659,7 @@ class Manager:
 
     def _rename_column(self, old_column_name, new_column_name, cursor):
         """Rename a column in the main archive table."""
-        cursor.execute("ALTER TABLE %s RENAME COLUMN %s TO %s"
+        cursor.execute("ALTER TABLE %s RENAME COLUMN '%s' TO '%s'"
                        % (self.table_name, old_column_name, new_column_name))
 
     def drop_columns(self, column_names):
@@ -1043,10 +1043,10 @@ class DaySummaryManager(Manager):
     }
 
     # SQL statements used by the metadata in the daily summaries.
-    meta_create_str = "CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL " \
-                      "UNIQUE PRIMARY KEY, value TEXT);"
+    meta_create_str = "CREATE TABLE %s_day__metadata (\"name\" CHAR(20) NOT NULL " \
+                      "UNIQUE PRIMARY KEY, \"value\" TEXT);"
     meta_replace_str = "REPLACE INTO %s_day__metadata VALUES(?, ?)"
-    meta_select_str = "SELECT value FROM %s_day__metadata WHERE name=?"
+    meta_select_str = "SELECT 'value' FROM %s_day__metadata WHERE 'name'=?"
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
@@ -1149,7 +1149,7 @@ class DaySummaryManager(Manager):
             cursor (weedb.Cursor): An open cursor
         """
         s = ', '.join(
-            ["%s %s" % column_type
+            ["\"%s\" %s" % column_type
              for column_type in DaySummaryManager.day_schemas[day_schema_type]])
 
         sql_create_str = "CREATE TABLE %s_day_%s (%s);" % (self.table_name, obs_type, s)
@@ -1502,13 +1502,13 @@ class DaySummaryManager(Manager):
                 continue
             # This will be list that looks like ['sum=2345.65', 'count=123', ... etc.]
             # It will only include attributes that are in the accumulator for this type.
-            set_list = ['%s=%s' % (k, getattr(day_accum[obs_type], k))
+            set_list = ["'%s'=%s" % (k, getattr(day_accum[obs_type], k))
                         for k in ['sum', 'count', 'wsum', 'sumtime',
                                   'xsum', 'ysum', 'dirsumtime',
                                   'squaresum', 'wsquaresum']
                         if hasattr(day_accum[obs_type], k)]
-            update_sql = "UPDATE {archive_table}_day_{obs_type} SET {set_stmt} " \
-                         "WHERE dateTime = ?;".format(archive_table=self.table_name,
+            update_sql = "UPDATE '{archive_table}_day_{obs_type}' SET {set_stmt} " \
+                         "WHERE 'dateTime' = ?;".format(archive_table=self.table_name,
                                                       obs_type=obs_type,
                                                       set_stmt=', '.join(set_list))
             # Update this observation type's weighted sums:
@@ -1559,12 +1559,12 @@ class DaySummaryManager(Manager):
                 the last timestamp. Returns None if there is nothing in the daily summaries.
         """
 
-        big_select = ["SELECT MIN(dateTime) AS mtime FROM %s_day_%s"
+        big_select = ["SELECT MIN('dateTime') AS mtime FROM %s_day_%s"
                       % (self.table_name, key) for key in self.daykeys]
         big_sql = " UNION ".join(big_select) + " ORDER BY mtime ASC LIMIT 1"
         first_ts = self.getSql(big_sql)
 
-        big_select = ["SELECT MAX(dateTime) AS mtime FROM %s_day_%s"
+        big_select = ["SELECT MAX('dateTime') AS mtime FROM %s_day_%s"
                       % (self.table_name, key) for key in self.daykeys]
         big_sql = " UNION ".join(big_select) + " ORDER BY mtime DESC LIMIT 1"
         last_ts = self.getSql(big_sql)
@@ -1595,7 +1595,7 @@ class DaySummaryManager(Manager):
             # accumulator.
             for _day_key in self.daykeys:
                 _cursor.execute(
-                    "SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key),
+                    "SELECT * FROM %s_day_%s WHERE 'dateTime' = ?" % (self.table_name, _day_key),
                     (_day_accum.timespan.start,))
                 _row = _cursor.fetchone()
                 # If the date does not exist in the database yet then _row will be None.
@@ -1632,7 +1632,7 @@ class DaySummaryManager(Manager):
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
             # ... and an appropriate SQL command with the correct number of question marks ...
             _qmarks = ','.join(len(_write_tuple) * '?')
-            _sql_replace_str = "REPLACE INTO %s_day_%s VALUES(%s)" % (
+            _sql_replace_str = "REPLACE INTO '%s_day_%s' VALUES(%s)" % (
                 self.table_name, _summary_type, _qmarks)
             # ... and write to the database. In case the type doesn't appear in the database,
             # be prepared to catch an exception:

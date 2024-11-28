@@ -294,8 +294,8 @@ class RESTThread(threading.Thread):
                 # 60 minutes before, so the SQL statement is exclusive on the
                 # left, inclusive on the right.
                 _result = dbmanager.getSql(
-                    "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
-                    "WHERE dateTime>? AND dateTime<=?"
+                    "SELECT SUM('rain'), MIN('usUnits'), MAX('usUnits') FROM %s "
+                    "WHERE 'dateTime'>? AND 'dateTime'<=?"
                     % dbmanager.table_name, (_time_ts - 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
@@ -309,8 +309,8 @@ class RESTThread(threading.Thread):
             if 'rain24' not in _datadict:
                 # Similar issue, except for last 24 hours:
                 _result = dbmanager.getSql(
-                    "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
-                    "WHERE dateTime>? AND dateTime<=?"
+                    "SELECT SUM('rain'), MIN('usUnits'), MAX('usUnits') FROM %s "
+                    "WHERE 'dateTime'>? AND 'dateTime'<=?"
                     % dbmanager.table_name, (_time_ts - 24 * 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
@@ -328,8 +328,8 @@ class RESTThread(threading.Thread):
                 # so we'll do it their way.  That means the SELECT statement
                 # is inclusive on both time ends:
                 _result = dbmanager.getSql(
-                    "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
-                    "WHERE dateTime>=? AND dateTime<=?"
+                    "SELECT SUM('rain'), MIN('usUnits'), MAX('usUnits') FROM %s "
+                    "WHERE 'dateTime'>=? AND 'dateTime'<=?"
                     % dbmanager.table_name, (_sod_ts, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
@@ -1779,7 +1779,7 @@ class AWEKASThread(RESTThread):
         # If the database does not have rainRate in its schema, an exception will be raised.
         # Be prepare to catch it.
         try:
-            rr = dbmanager.getSql('select rainRate from %s where dateTime=?'
+            rr = dbmanager.getSql("select 'rainRate' from %s where 'dateTime'=?"
                                   % dbmanager.table_name, (record['dateTime'],))
         except weedb.OperationalError:
             pass

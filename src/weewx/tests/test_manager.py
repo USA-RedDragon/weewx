@@ -86,23 +86,23 @@ class CommonWeightTests:
         # check weights for scalar types
         for key in self.db_manager.daykeys:
             archive_key = key if key != 'wind' else 'windSpeed'
-            result1 = self.db_manager.getSql("SELECT COUNT(%s) FROM archive" % archive_key)
-            result2 = self.db_manager.getSql("SELECT SUM(count) FROM archive_day_%s;" % key)
+            result1 = self.db_manager.getSql("SELECT COUNT('%s') FROM archive" % archive_key)
+            result2 = self.db_manager.getSql("SELECT SUM('count') FROM archive_day_%s;" % key)
             self.assertEqual(result1, result2)
-            result3 = self.db_manager.getSql("SELECT COUNT(%s) * %d FROM archive"
+            result3 = self.db_manager.getSql("SELECT COUNT('%s') * %d FROM archive"
                                              % (archive_key, interval_secs))
-            result4 = self.db_manager.getSql("SELECT SUM(sumtime) FROM archive_day_%s" % key)
+            result4 = self.db_manager.getSql("SELECT SUM('sumtime') FROM archive_day_%s" % key)
             self.assertEqual(result3, result4)
 
-            result5 = self.db_manager.getSql("SELECT SUM(%s * `interval` * 60) FROM archive"
+            result5 = self.db_manager.getSql("SELECT SUM('%s' * 'interval' * 60) FROM archive"
                                              % archive_key)
-            result6 = self.db_manager.getSql("SELECT SUM(wsum) FROM archive_day_%s" % key)
+            result6 = self.db_manager.getSql("SELECT SUM('wsum') FROM archive_day_%s" % key)
             if result5[0] is None:
                 self.assertEqual(result6[0], 0.0)
             else:
                 self.assertAlmostEqual(result5[0], result6[0], 3)
         # check weights for vector types, for now that is just type wind
-        result7 = self.db_manager.getSql("SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) FROM archive_day_wind")
+        result7 = self.db_manager.getSql("SELECT SUM('xsum'), SUM('ysum'), SUM('dirsumtime') FROM archive_day_wind")
         self.assertAlmostEqual(result7[0], 5032317.021, 3)
         self.assertAlmostEqual(result7[1], -2600.126, 3)
         self.assertEqual(result7[2], 1040400)

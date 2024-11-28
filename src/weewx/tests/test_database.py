@@ -185,21 +185,21 @@ class Common:
         # Now fetch them:
         with weewx.manager.Manager.open(self.archive_db_dict) as archive:
             # Test getSql on existing type:
-            bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts,))
+            bar0 = archive.getSql("SELECT 'barometer' FROM archive WHERE 'dateTime'=?", (start_ts,))
             self.assertEqual(bar0[0], barfunc(0))
 
             # Test getSql on existing type, no record:
-            bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts + 1,))
+            bar0 = archive.getSql("SELECT 'barometer' FROM archive WHERE 'dateTime'=?", (start_ts + 1,))
             self.assertEqual(bar0, None)
 
             # Try getSql on non-existing types
-            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT foo FROM archive WHERE dateTime=?",
+            self.assertRaises(weedb.OperationalError, archive.getSql, "SELECT 'foo' FROM archive WHERE 'dateTime'=?",
                               (start_ts,))
-            self.assertRaises(weedb.ProgrammingError, archive.getSql, "SELECT barometer FROM foo WHERE dateTime=?",
+            self.assertRaises(weedb.ProgrammingError, archive.getSql, "SELECT 'barometer' FROM foo WHERE 'dateTime'=?",
                               (start_ts,))
 
             # Test genSql:
-            for (irec,_row) in enumerate(archive.genSql("SELECT barometer FROM archive;")):
+            for (irec,_row) in enumerate(archive.genSql("SELECT 'barometer' FROM archive;")):
                 self.assertEqual(_row[0], barfunc(irec))
                 
             itest = int(nrecs/2)

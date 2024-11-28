@@ -297,11 +297,11 @@ class ETXType(weewx.xtypes.XType):
         end_ts = data['dateTime']
         start_ts = end_ts - self.et_period
         try:
-            r = db_manager.getSql("SELECT MAX(outTemp), MIN(outTemp), "
-                                  "AVG(radiation), AVG(windSpeed), "
-                                  "MAX(outHumidity), MIN(outHumidity), "
-                                  "MAX(usUnits), MIN(usUnits) FROM %s "
-                                  "WHERE dateTime>? AND dateTime <=?"
+            r = db_manager.getSql("SELECT MAX('outTemp'), MIN('outTemp'), "
+                                  "AVG('radiation'), AVG('windSpeed'), "
+                                  "MAX('outHumidity'), MIN('outHumidity'), "
+                                  "MAX('usUnits'), MIN('usUnits') FROM %s "
+                                  "WHERE 'dateTime'>? AND 'dateTime' <=?"
                                   % db_manager.table_name, (start_ts, end_ts))
         except weedb.DatabaseError:
             return ValueTuple(None, None, None)

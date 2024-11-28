@@ -115,7 +115,7 @@ class Common:
                 for aggregate in ['min', 'max', 'sum', 'count', 'avg']:
                     # Compare to the main archive:
                     res = manager.getSql(
-                        "SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type),
+                        "SELECT %s('%s') FROM archive WHERE 'dateTime'>? AND 'dateTime' <=?;" % (aggregate, stats_type),
                         (start_ts, stop_ts))
                     # The results from the daily summaries for this aggregation 
                     allStats_res = getattr(allStats[stats_type], aggregate)
@@ -125,7 +125,7 @@ class Common:
                     # Check the times of min and max as well:
                     if aggregate in ['min', 'max']:
                         res2 = manager.getSql(
-                            "SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (stats_type,),
+                            "SELECT 'dateTime' FROM archive WHERE '%s' = ? AND 'dateTime'>? AND 'dateTime' <=?" % (stats_type,),
                             (res[0], start_ts, stop_ts))
                         stats_time = getattr(allStats[stats_type], aggregate + 'time')
                         self.assertEqual(stats_time, res2[0],
@@ -144,11 +144,11 @@ class Common:
             # Test all the aggregates:
             for aggregate in ['min', 'max', 'sum', 'count', 'avg']:
                 if aggregate == 'max':
-                    res = manager.getSql("SELECT MAX(windGust) FROM archive WHERE dateTime>? AND dateTime <=?;",
+                    res = manager.getSql("SELECT MAX('windGust') FROM archive WHERE 'dateTime'>? AND 'dateTime' <=?;",
                                          (start_ts, stop_ts))
                 else:
                     res = manager.getSql(
-                        "SELECT %s(windSpeed) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate,),
+                        "SELECT %s('windSpeed') FROM archive WHERE 'dateTime'>? AND 'dateTime' <=?;" % (aggregate,),
                         (start_ts, stop_ts))
 
                 # From StatsDb:
@@ -158,18 +158,18 @@ class Common:
                 # Check the times of min and max as well:
                 if aggregate == 'min':
                     resmin = manager.getSql(
-                        "SELECT dateTime FROM archive WHERE windSpeed = ? AND dateTime>? AND dateTime <=?",
+                        "SELECT 'dateTime' FROM archive WHERE 'windSpeed' = ? AND 'dateTime'>? AND 'dateTime' <=?",
                         (res[0], start_ts, stop_ts))
                     self.assertEqual(allStats['wind'].mintime, resmin[0])
                 elif aggregate == 'max':
                     resmax = manager.getSql(
-                        "SELECT dateTime FROM archive WHERE windGust = ?  AND dateTime>? AND dateTime <=?",
+                        "SELECT 'dateTime' FROM archive WHERE 'windGust' = ?  AND 'dateTime'>? AND 'dateTime' <=?",
                         (res[0], start_ts, stop_ts))
                     self.assertEqual(allStats['wind'].maxtime, resmax[0])
 
             # Check RMS:
             (squaresum, count) = manager.getSql(
-                "SELECT SUM(windSpeed*windSpeed), COUNT(windSpeed) from archive where dateTime>? AND dateTime<=?;",
+                "SELECT SUM('windSpeed'*'windSpeed'), COUNT('windSpeed') from archive where 'dateTime'>? AND 'dateTime'<=?;",
                 (start_ts, stop_ts))
             rms = math.sqrt(squaresum / count) if count else None
             self.assertAlmostEqual(allStats['wind'].rms, rms)
@@ -231,7 +231,7 @@ class Common:
                     for aggregate in ('min', 'max', 'sum', 'count', 'avg'):
                         # Compare to the main archive:
                         res = manager.getSql(
-                            "SELECT %s(%s) FROM archive WHERE dateTime>? AND dateTime <=?;" % (aggregate, stats_type),
+                            "SELECT %s('%s') FROM archive WHERE 'dateTime'>? AND 'dateTime' <=?;" % (aggregate, stats_type),
                             (start_ts, stop_ts))
                         archive_result = res[0]
                         value_helper = getattr(getattr(getattr(tagStats, span)(), stats_type), aggregate)
@@ -240,7 +240,7 @@ class Common:
                         # Check the times of min and max as well:
                         if aggregate in ('min', 'max'):
                             res2 = manager.getSql(
-                                "SELECT dateTime FROM archive WHERE %s = ? AND dateTime>? AND dateTime <=?" % (
+                                "SELECT 'dateTime' FROM archive WHERE '%s' = ? AND 'dateTime'>? AND 'dateTime' <=?" % (
                                 stats_type,), (archive_result, start_ts, stop_ts))
                             stats_value_helper = getattr(getattr(getattr(tagStats, span)(), stats_type),
                                                          aggregate + 'time')
