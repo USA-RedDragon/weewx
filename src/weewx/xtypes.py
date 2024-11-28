@@ -231,8 +231,8 @@ class ArchiveTable(XType):
         else:
 
             # No aggregation
-            sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
-                      "WHERE dateTime > ? AND dateTime <= ?" % (obs_type, db_manager.table_name)
+            sql_str = "SELECT 'dateTime', '%s', 'usUnits', 'interval' FROM %s " \
+                      "WHERE 'dateTime' > ? AND 'dateTime' <= ?" % (obs_type, db_manager.table_name)
 
             std_unit_system = None
 
@@ -318,9 +318,9 @@ class ArchiveTable(XType):
 
     valid_aggregate_types = set(['sum', 'count', 'avg', 'max', 'min']).union(agg_sql_dict.keys())
 
-    simple_agg_sql = "SELECT %(aggregate_type)s(%(sql_type)s) FROM %(table_name)s " \
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
-                     "AND %(sql_type)s IS NOT NULL"
+    simple_agg_sql = "SELECT %(aggregate_type)s('%(sql_type)s') FROM %(table_name)s " \
+                     "WHERE 'dateTime' > %(start)s AND 'dateTime' <= %(stop)s " \
+                     "AND '%(sql_type)s' IS NOT NULL"
 
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
@@ -464,77 +464,77 @@ class DailySummaries(XType):
 
     # Set of SQL statements to be used for calculating simple aggregates from the daily summaries.
     agg_sql_dict = {
-        'avg': "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
-               "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'avg_ge': "SELECT SUM((wsum/sumtime) >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
-        'avg_le': "SELECT SUM((wsum/sumtime) <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
-        'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s "
-                 "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  "
-                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                   "ORDER BY max DESC, maxtime ASC LIMIT 1",
-        'max': "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s "
-               "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'max_ge': "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'max_le': "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'maxmin': "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'maxmintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
-                      "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                      "AND mintime IS NOT NULL "
-                      "ORDER BY min DESC, mintime ASC LIMIT 1",
-        'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'maxsumtime': "SELECT dateTime FROM %(table_name)s_day_%(obs_key)s  "
-                      "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                      "ORDER BY sum DESC, dateTime ASC LIMIT 1",
-        'maxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
-                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                   "AND maxtime IS NOT NULL "
-                   "ORDER BY max DESC, maxtime ASC LIMIT 1",
-        'meanmax': "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s "
-                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'meanmin': "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s "
-                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'min': "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s "
-               "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'min_ge': "SELECT SUM(min >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'min_le': "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'minmax': "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'minmaxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
-                      "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                      "AND maxtime IS NOT NULL "
-                      "ORDER BY max ASC, maxtime ASC ",
-        'minsum': "SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'minsumtime': "SELECT dateTime FROM %(table_name)s_day_%(obs_key)s  "
-                      "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                      "ORDER BY sum ASC, dateTime ASC LIMIT 1",
-        'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
-                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                   "AND mintime IS NOT NULL "
-                   "ORDER BY min ASC, mintime ASC LIMIT 1",
-        'not_null': "SELECT count>0 as c FROM %(table_name)s_day_%(obs_key)s "
-                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s ORDER BY c DESC LIMIT 1",
-        'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
-               "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s "
-               "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'sum_ge': "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'sum_le': "SELECT SUM(sum <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'vecavg': "SELECT SUM(xsum),SUM(ysum),SUM(sumtime)  FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'vecdir': "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'avg': "SELECT SUM('wsum'),SUM('sumtime') FROM %(table_name)s_day_%(obs_key)s "
+               "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'avg_ge': "SELECT SUM(('wsum'/'sumtime') >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s and 'sumtime <> 0",
+        'avg_le': "SELECT SUM(('wsum'/'sumtime') <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s and 'sumtime' <> 0",
+        'count': "SELECT SUM('count') FROM %(table_name)s_day_%(obs_key)s "
+                 "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'gustdir': "SELECT 'max_dir' FROM %(table_name)s_day_%(obs_key)s  "
+                   "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                   "ORDER BY 'max' DESC, 'maxtime' ASC LIMIT 1",
+        'max': "SELECT MAX('max') FROM %(table_name)s_day_%(obs_key)s "
+               "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'max_ge': "SELECT SUM('max' >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'max_le': "SELECT SUM('max' <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'maxmin': "SELECT MAX('min') FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'maxmintime': "SELECT 'mintime' FROM %(table_name)s_day_%(obs_key)s  "
+                      "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                      "AND 'mintime' IS NOT NULL "
+                      "ORDER BY 'min' DESC, 'mintime' ASC LIMIT 1",
+        'maxsum': "SELECT MAX('sum') FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'maxsumtime': "SELECT 'dateTime' FROM %(table_name)s_day_%(obs_key)s  "
+                      "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                      "ORDER BY 'sum' DESC, 'dateTime' ASC LIMIT 1",
+        'maxtime': "SELECT 'maxtime' FROM %(table_name)s_day_%(obs_key)s  "
+                   "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                   "AND 'maxtime' IS NOT NULL "
+                   "ORDER BY 'max' DESC, 'maxtime' ASC LIMIT 1",
+        'meanmax': "SELECT AVG('max') FROM %(table_name)s_day_%(obs_key)s "
+                   "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'meanmin': "SELECT AVG('min') FROM %(table_name)s_day_%(obs_key)s "
+                   "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'min': "SELECT MIN('min') FROM %(table_name)s_day_%(obs_key)s "
+               "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'min_ge': "SELECT SUM('min' >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'min_le': "SELECT SUM('min' <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'minmax': "SELECT MIN('max') FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'minmaxtime': "SELECT 'maxtime' FROM %(table_name)s_day_%(obs_key)s  "
+                      "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                      "AND 'maxtime' IS NOT NULL "
+                      "ORDER BY 'max' ASC, 'maxtime' ASC ",
+        'minsum': "SELECT MIN('sum') FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'minsumtime': "SELECT 'dateTime' FROM %(table_name)s_day_%(obs_key)s  "
+                      "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                      "ORDER BY 'sum' ASC, 'dateTime' ASC LIMIT 1",
+        'mintime': "SELECT 'mintime' FROM %(table_name)s_day_%(obs_key)s  "
+                   "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s "
+                   "AND 'mintime' IS NOT NULL "
+                   "ORDER BY 'min' ASC, 'mintime' ASC LIMIT 1",
+        'not_null': "SELECT 'count'>0 as c FROM %(table_name)s_day_%(obs_key)s "
+                    "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s ORDER BY c DESC LIMIT 1",
+        'rms': "SELECT SUM('wsquaresum'),SUM('sumtime') FROM %(table_name)s_day_%(obs_key)s "
+               "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'sum': "SELECT SUM('sum') FROM %(table_name)s_day_%(obs_key)s "
+               "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'sum_ge': "SELECT SUM('sum' >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'sum_le': "SELECT SUM('sum' <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'vecavg': "SELECT SUM('xsum'),SUM('ysum'),SUM('sumtime')  FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
+        'vecdir': "SELECT SUM('xsum'),SUM('ysum') FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE 'dateTime' >= %(start)s AND 'dateTime' < %(stop)s",
     }
 
     @staticmethod
@@ -643,21 +643,21 @@ class DailySummaries(XType):
     # These are SQL statements used for calculating series from the daily summaries.
     # They include "group_def", which will be replaced with a database-specific GROUP BY clause
     common = {
-        'min': "SELECT MIN(dateTime), MAX(dateTime), MIN(min) "
+        'min': "SELECT MIN('dateTime'), MAX('dateTime'), MIN('min') "
                "FROM %(day_table)s "
-               "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'max': "SELECT MIN(dateTime), MAX(dateTime), MAX(max) "
+               "WHERE 'dateTime'>=%(start)s AND 'dateTime'<%(stop)s %(group_def)s",
+        'max': "SELECT MIN('dateTime'), MAX('dateTime'), MAX('max') "
                "FROM %(day_table)s "
-               "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'avg': "SELECT MIN(dateTime), MAX(dateTime), SUM(wsum), SUM(sumtime) "
+               "WHERE 'dateTime'>=%(start)s AND 'dateTime'<%(stop)s %(group_def)s",
+        'avg': "SELECT MIN('dateTime'), MAX('dateTime'), SUM('wsum'), SUM('sumtime') "
                "FROM %(day_table)s "
-               "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'sum': "SELECT MIN(dateTime), MAX(dateTime), SUM(sum) "
+               "WHERE 'dateTime'>=%(start)s AND 'dateTime'<%(stop)s %(group_def)s",
+        'sum': "SELECT MIN('dateTime'), MAX('dateTime'), SUM('sum') "
                "FROM %(day_table)s "
-               "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'count': "SELECT MIN(dateTime), MAX(dateTime), SUM(count) "
+               "WHERE 'dateTime'>=%(start)s AND 'dateTime'<%(stop)s %(group_def)s",
+        'count': "SELECT MIN('dateTime'), MAX('dateTime'), SUM('count') "
                  "FROM %(day_table)s "
-                 "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
+                 "WHERE 'dateTime'>=%(start)s AND 'dateTime'<%(stop)s %(group_def)s",
     }
     # Database- and interval-specific "GROUP BY" clauses.
     group_defs = {

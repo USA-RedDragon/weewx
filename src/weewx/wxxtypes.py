@@ -561,8 +561,8 @@ class RainRater(weewx.xtypes.XType):
         # Get all rain events since the window start from the database. Put it in
         # a 'try' block because the database may not have a 'rain' field.
         try:
-            for row in db_manager.genSql("SELECT dateTime, usUnits, rain FROM %s "
-                                         "WHERE dateTime>? AND dateTime<=?;"
+            for row in db_manager.genSql("SELECT 'dateTime', 'usUnits', 'rain' FROM %s "
+                                         "WHERE 'dateTime'>? AND 'dateTime'<=?;"
                                          % db_manager.table_name, (start_ts, stop_ts)):
                 # Unpack the row:
                 time_ts, unit_system, rain = row

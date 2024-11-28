@@ -90,8 +90,8 @@ class DatabaseFix:
             weeutil.weeutil.TimeSpan: A sequence with the start of each day.
         """
 
-        _sql = "SELECT dateTime FROM %s_day_%s " \
-               "WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name, obs)
+        _sql = "SELECT 'dateTime' FROM %s_day_%s " \
+               "WHERE 'dateTime' >= ? AND 'dateTime' <= ?" % (self.dbm.table_name, obs)
 
         for _row in self.dbm.genSql(_sql, (start_ts, stop_ts)):
             yield weeutil.weeutil.daySpan(_row[0])
@@ -309,7 +309,7 @@ class WindSpeedRecalculation(DatabaseFix):
         _cursor = cursor or self.dbm.connection.cursor()
 
         max_update_str = "UPDATE '%s_day_%s' SET '%s'=?,'%s'=? " \
-                         "WHERE 'datetime'=?" % (self.dbm.table_name, obs, 'max', 'maxtime')
+                         "WHERE 'dateTime'=?" % (self.dbm.table_name, obs, 'max', 'maxtime')
         _cursor.execute(max_update_str, (value, when_ts, row_ts))
         if cursor is None:
             _cursor.close()
