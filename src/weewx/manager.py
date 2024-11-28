@@ -1045,7 +1045,7 @@ class DaySummaryManager(Manager):
     # SQL statements used by the metadata in the daily summaries.
     meta_create_str = "CREATE TABLE %s_day__metadata (\"name\" CHAR(20) NOT NULL " \
                       "UNIQUE PRIMARY KEY, \"value\" TEXT);"
-    meta_replace_str = "REPLACE INTO %s_day__metadata VALUES(?, ?)"
+    meta_replace_str = "INSERT INTO %s_day__metadata VALUES(?, ?)"
     meta_select_str = "SELECT 'value' FROM %s_day__metadata WHERE 'name'=?"
 
     def __init__(self, connection, table_name='archive', schema=None):
@@ -1632,7 +1632,7 @@ class DaySummaryManager(Manager):
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
             # ... and an appropriate SQL command with the correct number of question marks ...
             _qmarks = ','.join(len(_write_tuple) * '?')
-            _sql_replace_str = "REPLACE INTO '%s_day_%s' VALUES(%s)" % (
+            _sql_replace_str = "INSERT INTO '%s_day_%s' VALUES(%s)" % (
                 self.table_name, _summary_type, _qmarks)
             # ... and write to the database. In case the type doesn't appear in the database,
             # be prepared to catch an exception:
